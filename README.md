@@ -39,3 +39,4 @@ HOTP 算法实现比较简单，也有很多现成的库。还是自己实现一
 
 - An HMAC-Based One-Time Password Algorithm [https://tools.ietf.org/html/rfc4226](https://tools.ietf.org/html/rfc4226#page-3)
 - HMAC: Keyed-Hashing for Message Authentication [https://tools.ietf.org/html/rfc2104](https://tools.ietf.org/html/rfc2104)
+- Google Authenticator [https://github.com/google/google-authenticator](https://github.com/google/google-authenticator)
