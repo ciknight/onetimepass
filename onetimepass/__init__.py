@@ -13,7 +13,6 @@ __auth__ = 'CI_Knight <ci_knight@msn.cn>'
 class OneTimePass(object):
 
     DIGEST_METHOD = hashlib.sha1
-    TOKEN_LENGTH = 6
 
     def __init__(self, secret, *args, **kwagrs):
         super(OneTimePass, self).__init__()
@@ -51,7 +50,7 @@ class OneTimePass(object):
         token = token_base % (10 ** token_length)
         return token
 
-    def get_totp(self, interval_length, token_length=6, clock=None):
+    def get_totp(self, interval_length=30, token_length=6, clock=None):
         if clock is None:
             clock = int(time.time())
 
@@ -60,11 +59,12 @@ class OneTimePass(object):
                 token_length=token_length)
 
     def valid_hotp(self, token, token_length=6, last=1, trials=1000):
+        token = self._smart_str(token)
         if not self._is_valid_token(token, token_length):
             return False
 
         for i in xrange(last + 1, last + trials +1):
-            token_candidate = self.get_hotp(intervals_no=i,
+            token_candidate = self.get_hotp(interval_no=i,
                     token_length=token_length)
             if token_candidate == int(token):
                 return i
@@ -73,6 +73,7 @@ class OneTimePass(object):
 
     def valid_totp(self, token, token_length=6, clock=None,
                 interval_length=30, window=0):
+        token = self._smart_str(token)
         if not self._is_valid_token(token, token_length):
             return False
 
