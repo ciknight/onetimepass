@@ -3,7 +3,9 @@
 import base64
 import hashlib
 import hmac
+import random
 import six
+import string
 import struct
 import time
 
@@ -13,6 +15,7 @@ __auth__ = 'CI_Knight <ci_knight@msn.cn>'
 class OneTimePass(object):
 
     DIGEST_METHOD = hashlib.sha1
+    S = string.ascii_letters + string.digits
 
     def __init__(self, secret, *args, **kwagrs):
         super(OneTimePass, self).__init__()
@@ -35,6 +38,10 @@ class OneTimePass(object):
         if isinstance(token, bytes):
             token = six.b(str(token))
         return token.isdigit() and len(token) <= token_length
+
+    @classmethod
+    def generate_secret(cls, size=16):
+        return ''.join(random.sample(cls.S, size))
 
     def get_hotp(self, interval_no, token_length=6):
         """
