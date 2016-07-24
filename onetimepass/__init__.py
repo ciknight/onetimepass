@@ -1,8 +1,15 @@
 # -*- coding: utf-8 -*-
 
+try:
+    from cStringIO import StringIO
+except ImportError:
+    from io import StringIO
+
 import base64
 import hashlib
 import hmac
+import qrcode
+import random
 import six
 import struct
 import time
@@ -13,9 +20,15 @@ __auth__ = 'CI_Knight <ci_knight@msn.cn>'
 class OneTimePass(object):
 
     DIGEST_METHOD = hashlib.sha1
+    # S = string.ascii_letters + string.digits
+    S = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ234567'
 
-    def __init__(self, secret, *args, **kwagrs):
+    def __init__(self, *args, **kwagrs):
         super(OneTimePass, self).__init__()
+        secret = kwagrs.get('secret')
+        if not secret:
+            secret = self.generate_secret()
+
         secret = self._smart_str(secret).replace(b' ', b'')
         try:
             self.key = base64.b32decode(secret, casefold=True)
@@ -35,6 +48,26 @@ class OneTimePass(object):
         if isinstance(token, bytes):
             token = six.b(str(token))
         return token.isdigit() and len(token) <= token_length
+
+    @classmethod
+    def generate_secret(cls, size=16, b64=False):
+        if size <= 0:
+            return None
+
+        secret = ''.join([random.choice(cls.S) for _ in range(0, size)])
+        if b64:
+            return cls._generate_qrcode(secret, b64)
+
+        return secret
+
+    @staticmethod
+    def _generate_qrcode(secret, b64=False):
+        buffer = StringIO()
+        qrcode.make(secret).save(buffer)
+        if b64:
+            return base64.b64encode(buffer.getvalue())
+
+        return buffer
 
     def get_hotp(self, interval_no, token_length=6):
         """
@@ -58,12 +91,12 @@ class OneTimePass(object):
         return self.get_hotp(interval_no,
                 token_length=token_length)
 
-    def valid_hotp(self, token, token_length=6, last=1, trials=1000):
+    def valid_hotp(self, token, last=1, trials=1000, token_length=6):
         token = self._smart_str(token)
         if not self._is_valid_token(token, token_length):
             return False
 
-        for i in xrange(last + 1, last + trials +1):
+        for i in xrange(last, last + trials):
             token_candidate = self.get_hotp(interval_no=i,
                     token_length=token_length)
             if token_candidate == int(token):
