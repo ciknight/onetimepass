@@ -1,8 +1,10 @@
 # -*- coding: utf-8 -*-
 
+import cStringIO
 import base64
 import hashlib
 import hmac
+import qrcode
 import random
 import six
 import string
@@ -40,8 +42,21 @@ class OneTimePass(object):
         return token.isdigit() and len(token) <= token_length
 
     @classmethod
-    def generate_secret(cls, size=16):
-        return ''.join(random.sample(cls.S, size))
+    def generate_secret(cls, size=16, b64=False):
+        secret = ''.join(random.sample(cls.S, size))
+        if b64:
+            return cls._generate_qrcode(secret, b64)
+
+        return secret
+
+    @staticmethod
+    def _generate_qrcode(secret, b64=False):
+        buffer = cStringIO.StringIO()
+        qrcode.make(secret).save(buffer)
+        if b64:
+            return base64.b64encode(buffer.getvalue())
+
+        return buffer
 
     def get_hotp(self, interval_no, token_length=6):
         """
