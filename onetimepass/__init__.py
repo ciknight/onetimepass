@@ -1,11 +1,11 @@
 # -*- coding: utf-8 -*-
 
+import base64
 try:
     from cStringIO import StringIO
 except ImportError:
     from io import StringIO
 
-import base64
 import hashlib
 import hmac
 import qrcode
@@ -13,6 +13,10 @@ import random
 import six
 import struct
 import time
+try:
+    from urllib.parse import quote
+except ImportError:
+    from urllib import quote
 
 __auth__ = 'CI_Knight <ci_knight@msn.cn>'
 
@@ -50,24 +54,31 @@ class OneTimePass(object):
         return token.isdigit() and len(token) <= token_length
 
     @classmethod
-    def generate_secret(cls, size=16, b64=False):
+    def generate_secret(cls, size=16):
         if size <= 0:
             return None
 
-        secret = ''.join([random.choice(cls.S) for _ in range(0, size)])
-        if b64:
-            return cls._generate_qrcode(secret, b64)
+        return ''.join([random.choice(cls.S) for _ in range(0, size)])
 
-        return secret
+    @classmethod
+    def generate_qrcode(cls, secret, name, otp_type='totp', issuer=None,  b64=False):
+        """ generate google Authenticator qrcode """
+        base = 'otpauth://%s/' % otp_type
+        uri = '%(base)s%(name)s?secret=%(secret)s' % {
+            'base': base,
+            'name': quote(name, safe='@'),
+            'secret': secret
+        }
+        if issuer:
+            uri += '&issuer=%s' % issuer
 
-    @staticmethod
-    def _generate_qrcode(secret, b64=False):
         buffer = StringIO()
-        qrcode.make(secret).save(buffer)
+        qr = qrcode.make(uri)
         if b64:
+            qr.save(buffer)
             return base64.b64encode(buffer.getvalue())
 
-        return buffer
+        return qr
 
     def get_hotp(self, interval_no, token_length=6):
         """

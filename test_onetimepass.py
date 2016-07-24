@@ -12,8 +12,8 @@ class Test(unittest.TestCase):
         secret = OneTimePass.generate_secret(size=1000)
         self.assertTrue(secret)
         self.assertTrue(len(secret) == 1000)
-        self.assertTrue(OneTimePass._generate_qrcode(secret))
-        self.assertTrue(OneTimePass._generate_qrcode(secret, b64=True))
+        self.assertTrue(OneTimePass.generate_qrcode(secret, 'hi'))
+        self.assertTrue(OneTimePass.generate_qrcode(secret, 'hi', b64=True))
 
     def test_hotp(self):
         otp = OneTimePass()
