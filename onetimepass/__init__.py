@@ -96,9 +96,9 @@ class OneTimePass(object):
 
     def get_totp(self, interval_length=30, token_length=6, clock=None):
         if clock is None:
-            clock = int(time.time())
+            clock = time.time()
 
-        interval_no = clock // interval_length
+        interval_no = int(clock) // interval_length
         return self.get_hotp(interval_no,
                 token_length=token_length)
 
@@ -107,7 +107,7 @@ class OneTimePass(object):
         if not self._is_valid_token(token, token_length):
             return False
 
-        for i in xrange(last, last + trials):
+        for i in six.moves.xrange(last + 1, last + trials + 1):
             token_candidate = self.get_hotp(interval_no=i,
                     token_length=token_length)
             if token_candidate == int(token):
@@ -122,12 +122,12 @@ class OneTimePass(object):
             return False
 
         if clock is None:
-            clock = int(time.time())
+            clock = time.time()
 
         for w in range(-window, window+1):
             token_candidate = self.get_totp(interval_length=interval_length,
                     token_length=token_length,
-                    clock=clock+(w+interval_length))
+                    clock=int(clock)+(w*interval_length))
             if token_candidate == int(token):
                 return True
 
